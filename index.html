@@ -1,122 +1,250 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Magic Spell Game</title>
   <style>
-    #game { max-width: 400px; margin: auto; text-align: center; }
-    .map { font-family: monospace; margin-bottom: 10px; }
-    .enemy { color: red; font-weight: bold; }
+    body {
+      font-family: 'Georgia', serif;
+      background: #f0f0f0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    #output {
+      margin-top: 20px;
+      min-height: 60px;
+      font-style: italic;
+    }
+    input[type="text"] {
+      width: 60%;
+      padding: 8px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: none;
+      background: #6b5b95;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #57457b;
+    }
+    .explore {
+      margin-top: 40px;
+    }
+    .direction-buttons button {
+      margin: 5px;
+      padding: 6px 14px;
+    }
+    #locationText {
+      margin-top: 10px;
+      font-size: 1.1em;
+    }
+    #distanceDisplay {
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    #minimap {
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: repeat(5, 20px);
+      gap: 3px;
+      justify-content: center;
+    }
+    .map-cell {
+      width: 20px;
+      height: 20px;
+      background: #ccc;
+      border: 1px solid #999;
+    }
+    .current {
+      background: #6b5b95;
+    }
+    .visited {
+      background: #aaa;
+    }
+    #inventory {
+      margin-top: 20px;
+      font-size: 0.95em;
+    }
   </style>
 </head>
 <body>
-  <div id="game">
-    <h2>Magic Spell Game</h2>
-    <div id="map" class="map"></div>
-    <div id="location"></div>
-    <div>
-      <button onclick="move('north')">North</button><br>
-      <button onclick="move('west')">West</button>
-      <button onclick="move('east')">East</button><br>
-      <button onclick="move('south')">South</button>
+  <h1>🧤 Magic Spell Game</h1>
+  <p>Type a magic word and cast a spell!</p>
+  <input id="spellInput" type="text" placeholder="Enter spell..." />
+  <button onclick="castSpell()">Cast</button>
+  <div id="output"></div>
+
+  <div class="explore">
+    <h3>🌍 Explore the World</h3>
+    <div class="direction-buttons">
+      <button onclick="move('north')">⬆ North</button><br />
+      <button onclick="move('west')">⬅ West</button>
+      <button onclick="move('east')">East ➡</button><br />
+      <button onclick="move('south')">⬇ South</button>
     </div>
-    <p>
-      <input id="spellInput" placeholder="Cast a spell" />
-      <button onclick="castSpell()">Cast</button>
-    </p>
-    <div id="output"></div>
+    <p id="locationText">You are in the central garden.</p>
+    <p id="distanceDisplay">Distance to origin: 0m</p>
+    <div id="minimap"></div>
+    <div id="inventory"><strong>Inventory:</strong> <span id="inventoryList">(empty)</span></div>
   </div>
 
   <script>
-    let player = { x: 0, y: 0 };
-    const mapSize = 5;
-
-    let enemies = [
-      { name: "Goblin", x: 2, y: 2, hp: 3 },
-      { name: "Wraith", x: 4, y: 1, hp: 2 }
+    const spellEffects = [
+      { keyword: "fire", effect: "A burst of flames erupts from your wand, lighting up the sky." },
+      { keyword: "ice", effect: "Sharp icicles shoot forward, freezing the air." },
+      { keyword: "wind", effect: "A gust of wind sweeps through the area, swirling leaves and dust." },
+      { keyword: "light", effect: "A glowing orb of light floats into the sky, illuminating everything." },
+      { keyword: "dark", effect: "Shadows stretch and twist as a veil of darkness settles in." },
+      { keyword: "grow", effect: "Vines burst from the ground, sprouting flowers and glowing moss." },
+      { keyword: "teleport", effect: "You shimmer and vanish, appearing somewhere else entirely." },
+      { keyword: "storm", effect: "Thunder rumbles as lightning cracks across the sky." },
+      { keyword: "earth", effect: "The ground trembles, and stones rise into the air." },
+      { keyword: "bubble", effect: "A shimmering bubble surrounds you, protecting you from harm." },
+      { keyword: "sky", effect: "The sky parts above you, revealing a hidden constellation." }
     ];
 
-    function move(dir) {
-      if (dir === 'north') player.y--;
-      if (dir === 'south') player.y++;
-      if (dir === 'west')  player.x--;
-      if (dir === 'east')  player.x++;
-      player.x = Math.max(0, Math.min(mapSize - 1, player.x));
-      player.y = Math.max(0, Math.min(mapSize - 1, player.y));
-      enemyChase();
-      updateGame();
-    }
+    const scrolls = {};
+    spellEffects.forEach(spell => {
+      const rx = Math.floor(Math.random() * 201) - 100;
+      const ry = Math.floor(Math.random() * 201) - 100;
+      scrolls[`${rx},${ry}`] = `You find a scroll titled: '${spell.keyword}'.`;
+    });
+
+    const inventory = [];
+    let x = 0, y = 0;
+    const visited = ['0,0'];
+    const completedQuests = new Set();
+    const spellComboCast = new Set();
 
     function castSpell() {
-      const spell = document.getElementById("spellInput").value.toLowerCase().trim();
-      let foundEnemy = enemies.find(e => e.x === player.x && e.y === player.y);
-      if (foundEnemy) {
-        if (spell.includes("fire") || spell.includes("zap")) {
-          foundEnemy.hp--;
-          print(`You hit the ${foundEnemy.name} with ${spell}! HP left: ${foundEnemy.hp}`);
-          if (foundEnemy.hp <= 0) {
-            enemies = enemies.filter(e => e !== foundEnemy);
-            print(`You defeated the ${foundEnemy.name}!`);
+      const input = document.getElementById('spellInput').value.toLowerCase();
+      let result = "Nothing happens. Perhaps try a different word.";
+      const key = `${x},${y}`;
+
+      for (let spell of spellEffects) {
+        if (input.includes(spell.keyword)) {
+          spellComboCast.add(spell.keyword);
+          result = spell.effect;
+          if (specialEvents[key] && specialEvents[key].keyword === spell.keyword) {
+            result += ' ' + specialEvents[key].reward;
+            inventory.push(specialEvents[key].reward);
+            updateInventory();
+            completedQuests.add(spell.keyword);
+            result += '\n' + specialEvents[key].npc;
           }
-        } else {
-          print(`Your spell had no effect. The ${foundEnemy.name} strikes back!`);
+          break;
         }
-      } else {
-        print(`Nothing happens. No enemy here.`);
+      }
+
+      document.getElementById('output').textContent = result;
+      document.getElementById('spellInput').value = "";
+      checkEnding();
+    }
+
+    function updateInventory() {
+      document.getElementById('inventoryList').textContent = inventory.length > 0 ? inventory.join(", ") : "(empty)";
+    }
+
+    function move(direction) {
+      if (direction === 'north' && y < 100) y++;
+      if (direction === 'south' && y > -100) y--;
+      if (direction === 'east' && x < 100) x++;
+      if (direction === 'west' && x > -100) x--;
+
+      const key = `${x},${y}`;
+      if (!visited.includes(key)) visited.push(key);
+      if (visited.length > 10) visited.shift();
+
+      let text = locations[key] || "You enter a room.";
+      if (specialEvents[key]) text += ' ' + specialEvents[key].hint;
+      if (scrolls[key]) text += ' ' + scrolls[key];
+
+      document.getElementById('locationText').innerHTML = text;
+      const distance = Math.round(Math.sqrt(x*x + y*y) * 10);
+      document.getElementById('distanceDisplay').textContent = `Distance to origin: ${distance}m`;
+      updateMinimap();
+      checkEnding();
+    }
+
+    function checkEnding() {
+      if (completedQuests.size >= 3) {
+        endGame("You completed the quests! This is 1 of 3 endings.");
+      } else if (spellComboCast.size >= 6) {
+        endGame("You discovered a powerful spell combo! This is 1 of 3 endings.");
+      } else if (x === 100 || x === -100 || y === 100 || y === -100) {
+        endGame("You found the strange borderlands... This is 1 of 3 endings.");
       }
     }
 
-    function enemyChase() {
-      enemies.forEach(e => {
-        let dx = player.x - e.x;
-        let dy = player.y - e.y;
-        if (Math.abs(dx) > Math.abs(dy)) {
-          e.x += Math.sign(dx);
-        } else {
-          e.y += Math.sign(dy);
-        }
-      });
+    function endGame(message) {
+      document.getElementById('output').textContent = message + " There are 3 total endings.";
     }
 
-    function updateGame() {
-      document.getElementById("location").textContent = `You are at (${player.x}, ${player.y})`;
-      let nearby = enemies.filter(e =>
-        Math.abs(e.x - player.x) <= 1 && Math.abs(e.y - player.y) <= 1
-      );
-      let here = enemies.find(e => e.x === player.x && e.y === player.y);
-      let msg = "";
-      if (here) {
-        msg += `<p class="enemy">⚔️ You have encountered a ${here.name}!</p>`;
-      } else if (nearby.length > 0) {
-        msg += `<p class="enemy">⚠️ You sense danger nearby...</p>`;
-      }
-      renderMap();
-      print(msg, true);
-    }
+    const part1 = [
+      "You see crumbling ruins", "You stand by a still pond", "You hear faint bells in the wind",
+      "You walk under overgrown arches", "You arrive at a mossy hill", "You approach flickering lanterns",
+      "You feel warmth in the ground", "You hear murmuring voices nearby", "You follow a trail of glittering pebbles",
+      "You stand beneath a twisted tree"
+    ];
 
-    function renderMap() {
-      let map = "";
-      for (let y = 0; y < mapSize; y++) {
-        for (let x = 0; x < mapSize; x++) {
-          if (player.x === x && player.y === y) {
-            map += "🧙 ";
-          } else if (enemies.find(e => e.x === x && e.y === y)) {
-            map += "👹 ";
-          } else {
-            map += "⬜ ";
+    const part2 = [
+      "where the air hums with forgotten magic.", "that reflects the stars even in daylight.", "from a time when dragons roamed freely.",
+      "marking the edge of a vanished kingdom.", "and sense a hidden chamber below.", "that whisper old secrets if you listen.",
+      "filled with butterflies made of light.", "and your shadow moves on its own.", "that leads toward a distant spire.",
+      "where time seems to slow down."
+    ];
+
+    const locations = {};
+    for (let xi = -100; xi <= 100; xi++) {
+      for (let yi = -100; yi <= 100; yi++) {
+        const key = `${xi},${yi}`;
+        if (!locations[key]) {
+          if ((Math.abs(xi * 31 + yi * 17) % 100) < 25) {
+            const index = (Math.abs(xi + yi) % 10);
+            locations[key] = `${part1[index]} ${part2[index]}`;
           }
         }
-        map += "<br>";
       }
-      document.getElementById("map").innerHTML = map;
     }
 
-    function print(msg, replace = false) {
-      let output = document.getElementById("output");
-      if (replace) output.innerHTML = msg;
-      else output.innerHTML += `<p>${msg}</p>`;
+    locations['0,0'] = "You are in the central garden.";
+
+    function updateMinimap() {
+      const minimap = document.getElementById('minimap');
+      minimap.innerHTML = "";
+      const size = 5;
+      const offset = Math.floor(size / 2);
+      for (let row = offset; row >= -offset; row--) {
+        for (let col = -offset; col <= offset; col++) {
+          const cx = x + col;
+          const cy = y + row;
+          const cell = document.createElement('div');
+          cell.className = 'map-cell';
+          const key = `${cx},${cy}`;
+          if (x === cx && y === cy) {
+            cell.classList.add('current');
+          } else if (visited.includes(key)) {
+            cell.classList.add('visited');
+          }
+          minimap.appendChild(cell);
+        }
+      }
     }
 
-    updateGame();
+    updateMinimap();
   </script>
 </body>
 </html>
