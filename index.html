@@ -99,16 +99,30 @@
   <div class="explore">
     <h3>🌍 Explore the World</h3>
     <div class="direction-buttons">
-      <button onclick="move('north')">⬆ North</button><br />
-      <button onclick="move('west')">⬅ West</button>
-      <button onclick="move('east')">East ➡</button><br />
-      <button onclick="move('south')">⬇ South</button>
+      <button id="north">⬆ North</button><br />
+      <button id="west">⬅ West</button>
+      <button id="east">East ➡</button><br />
+      <button id="south">⬇ South</button>
     </div>
     <p id="locationText">You are in the central garden.</p>
     <p id="distanceDisplay">Distance to origin: 0m</p>
     <div id="minimap"></div>
     <div id="inventory"><strong>Inventory:</strong><div id="inventoryList"><span>(empty)</span></div></div>
   </div>
+
+  <script>
+    window.onload = function () {
+      document.getElementById('north').onclick = () => move('north');
+      document.getElementById('south').onclick = () => move('south');
+      document.getElementById('east').onclick = () => move('east');
+      document.getElementById('west').onclick = () => move('west');
+
+      updateMinimap();
+    };
+
+    // ... (rest of your JavaScript code remains unchanged below)
+
+
 
   <script>
     const spellEffects = [
