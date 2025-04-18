@@ -1,141 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Magic Spell Game</title>
   <style>
-    body {
-      font-family: fantasy, serif;
-      background: #f4f4f4;
-      margin: 20px;
-      text-align: center;
-    }
-    #world, #inventory {
-      margin: 20px auto;
-      padding: 10px;
-      border: 2px solid #000;
-      max-width: 600px;
-    }
-    #spellInput {
-      padding: 10px;
-      font-size: 1em;
-      width: 300px;
-    }
-    #castButton {
-      padding: 10px 20px;
-      font-size: 1em;
-    }
-    #endingScreen {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      background: rgba(10, 10, 10, 0.95);
-      color: #fff;
-      font-size: 1.5em;
-      padding: 50px;
-      text-align: center;
-      width: 100%;
-      height: 100%;
-      z-index: 10;
-    }
+    body { font-family: monospace; background: black; color: lime; padding: 20px; }
+    #minimap { margin-bottom: 10px; }
+    .npc { color: cyan; }
+    .location { font-weight: bold; }
+    .locked { color: gray; }
   </style>
-  <datalist id="spellSuggestions">
-    <option value="fire">
-    <option value="ice">
-    <option value="wind">
-    <option value="light">
-    <option value="dark">
-    <option value="grow">
-    <option value="teleport">
-    <option value="storm">
-    <option value="earth">
-    <option value="bubble">
-    <option value="sky">
-  </datalist>
 </head>
 <body>
-  <h1>🌟 Magic Spell Game 🌟</h1>
-
-  <div id="world">
-    <h2>Garden</h2>
-    <p>A peaceful garden with a mysterious tree.</p>
-  </div>
-
-  <input id="spellInput" type="text" list="spellSuggestions" placeholder="Enter spell..." />
-  <button id="castButton">Cast</button>
-
-  <div id="inventory">
-    <h3>Inventory</h3>
-    <ul id="inventoryList"></ul>
-  </div>
-
-  <div id="endingScreen">
-    <h2>✨ You have fulfilled all magical events! ✨</h2>
-    <p>The world recognizes your power. The story ends, but the magic remains.</p>
-  </div>
-
+  <div id="minimap"></div>
+  <div class="location" id="location"></div>
+  <div id="output"></div>
+  <input id="spellInput" placeholder="Type a spell or direction..." autofocus>
   <script>
-    const spellInput = document.getElementById("spellInput");
-    const inventoryList = document.getElementById("inventoryList");
-    const endingScreen = document.getElementById("endingScreen");
-
-    const inventory = [];
-
-    const specialEvents = {
-      garden: { spell: "grow", reward: "Mystic Flower", description: "A flower blooms." },
-      castle: { spell: "teleport", reward: "Castle Key", description: "You teleport to a grand castle." },
-      pool: { spell: "bubble", reward: "Water Orb", description: "A glowing orb floats to the surface." },
-      sky: { spell: "sky", reward: "Sky Feather", description: "A feather floats down from the clouds." }
+    const map = {
+      '0,0': 'a garden with silver trees',
+      '0,1': 'a quiet library',
+      '1,0': 'a shimmering pool',
+      '1,1': 'a castle courtyard',
+      '-1,0': 'a dusty tower',
+      '0,-1': 'a field with floating stones',
     };
 
-    const world = document.getElementById("world");
-    const castButton = document.getElementById("castButton");
+    const specialEvents = {
+      '0,0': { keyword: 'grow', message: 'A tiny tree sprouts beside you. The dryad smiles.' },
+      '0,1': { keyword: 'read', message: 'The librarian ghost nods. You understand the forbidden text.' },
+      '1,0': { keyword: 'splash', message: 'A water spirit rises. "Thank you for waking me."' },
+      '1,1': { keyword: 'bow', message: 'The guard kneels. "You are worthy."' },
+      '-1,0': { keyword: 'clean', message: 'The dust lifts. A voice echoes: "My tower is restored."' },
+      '0,-1': { keyword: 'fly', message: 'You hover among the stones. A wind voice whispers approval.' }
+    };
+
+    const inventory = [];
+    let position = { x: 0, y: 0 };
+    const visited = new Set();
+    const npcsHelped = [];
+    let gameEnded = false;
+
+    const endings = [
+      "You vanish in a flash of light, forgotten by the world.",
+      "You become a wandering spirit, searching for purpose.",
+      "You awaken in a hidden sanctuary, welcomed as an apprentice.",
+      "You are crowned a protector of realms unknown.",
+      "You ascend into myth, your story whispered in every shadow."
+    ];
+
+    function updateUI() {
+      const key = `${position.x},${position.y}`;
+      visited.add(key);
+      const locationText = map[key] || "a mysterious fog";
+      document.getElementById('location').textContent = `You are in ${locationText}.`;
+      document.getElementById('minimap').textContent = `Visited: ${[...visited].join(' | ')}`;
+    }
 
     function updateInventory() {
-      inventoryList.innerHTML = "";
-      inventory.forEach(item => {
-        const li = document.createElement("li");
-        li.textContent = item;
-        inventoryList.appendChild(li);
-      });
+      document.getElementById('output').textContent = `Inventory: ${inventory.join(', ') || 'empty'}`;
     }
 
-    function castSpell() {
-      const spell = spellInput.value.toLowerCase().trim();
-      spellInput.value = "";
+    function castSpell(input) {
+      if (gameEnded) return;
 
-      let message = `You cast "${spell}"... Nothing seems to happen.`;
+      input = input.toLowerCase().trim();
+      const key = `${position.x},${position.y}`;
 
-      for (let place in specialEvents) {
-        const event = specialEvents[place];
-        if (spell === event.spell && !inventory.includes(event.reward)) {
-          message = event.description;
-          inventory.push(event.reward);
-          break;
+      if (['north', 'south', 'east', 'west'].includes(input)) {
+        if (input === 'north') position.y += 1;
+        if (input === 'south') position.y -= 1;
+        if (input === 'east') position.x += 1;
+        if (input === 'west') position.x -= 1;
+        updateUI();
+        return;
+      }
+
+      if (specialEvents[key] && specialEvents[key].keyword === input) {
+        if (!npcsHelped.includes(key)) {
+          npcsHelped.push(key);
         }
+        document.getElementById('output').textContent = specialEvents[key].message;
+        return;
       }
 
-      const p = document.createElement("p");
-      p.textContent = message;
-      world.appendChild(p);
+      if (input === 'ascend') {
+        let endingText = "";
+        const count = npcsHelped.length;
+        const index = Math.min(count, endings.length - 1);
+        endingText = endings[index] + `\nYou achieved Ending ${index + 1} of ${endings.length}.`;
+        document.getElementById('output').textContent = endingText;
+        gameEnded = true;
+        return;
+      }
 
+      inventory.push(input);
       updateInventory();
-      checkForEnding();
     }
 
-    function checkForEnding() {
-      const totalEvents = Object.keys(specialEvents).length;
-      const completed = Object.values(specialEvents).filter(e => inventory.includes(e.reward)).length;
-      if (completed === totalEvents) {
-        endingScreen.style.display = "block";
+    document.getElementById('spellInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        castSpell(e.target.value);
+        e.target.value = '';
       }
-    }
-
-    castButton.addEventListener("click", castSpell);
-    spellInput.addEventListener("keydown", e => {
-      if (e.key === "Enter") castSpell();
     });
+
+    updateUI();
   </script>
 </body>
 </html>
