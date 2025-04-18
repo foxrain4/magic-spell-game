@@ -71,6 +71,14 @@
       margin: 5px;
       padding: 6px 14px;
     }
+    #locationText {
+      margin-top: 10px;
+      font-size: 1.1em;
+    }
+    #distanceDisplay {
+      font-weight: bold;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
@@ -94,6 +102,7 @@
       <button onclick="move('south')">⬇ South</button>
     </div>
     <p id="locationText">You are in the central garden.</p>
+    <p id="distanceDisplay">Distance to origin: 0m</p>
   </div>
 
   <script>
@@ -158,6 +167,9 @@
       const key = `${x},${y}`;
       const text = locations[key] || "You explore a mysterious area with unknown magic.";
       document.getElementById('locationText').textContent = text;
+
+      const distance = Math.round(Math.sqrt(x*x + y*y) * 10); // 10 meters per tile
+      document.getElementById('distanceDisplay').textContent = `Distance to origin: ${distance}m`;
     }
   </script>
 </body>
