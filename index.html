@@ -99,10 +99,10 @@
   <div class="explore">
     <h3>🌍 Explore the World</h3>
     <div class="direction-buttons">
-      <button id="north">⬆ North</button><br />
-      <button id="west">⬅ West</button>
-      <button id="east">East ➡</button><br />
-      <button id="south">⬇ South</button>
+      <button onclick="move('north')">⬆ North</button><br />
+      <button onclick="move('west')">⬅ West</button>
+      <button onclick="move('east')">East ➡</button><br />
+      <button onclick="move('south')">⬇ South</button>
     </div>
     <p id="locationText">You are in the central garden.</p>
     <p id="distanceDisplay">Distance to origin: 0m</p>
@@ -111,156 +111,23 @@
   </div>
 
   <script>
-    window.onload = function () {
-      document.getElementById('north').onclick = () => move('north');
-      document.getElementById('south').onclick = () => move('south');
-      document.getElementById('east').onclick = () => move('east');
-      document.getElementById('west').onclick = () => move('west');
-
-      updateMinimap();
-    };
-
-    // ... (rest of your JavaScript code remains unchanged below)
-
-
-
-  <script>
-    const spellEffects = [
-      { keyword: "fire", effect: "A burst of flames erupts from your wand, lighting up the sky." },
-      { keyword: "ice", effect: "Sharp icicles shoot forward, freezing the air." },
-      { keyword: "wind", effect: "A gust of wind sweeps through the area, swirling leaves and dust." },
-      { keyword: "light", effect: "A glowing orb of light floats into the sky, illuminating everything." },
-      { keyword: "dark", effect: "Shadows stretch and twist as a veil of darkness settles in." },
-      { keyword: "grow", effect: "Vines burst from the ground, sprouting flowers and glowing moss." },
-      { keyword: "teleport", effect: "You shimmer and vanish, appearing somewhere else entirely." },
-      { keyword: "storm", effect: "Thunder rumbles as lightning cracks across the sky." },
-      { keyword: "earth", effect: "The ground trembles, and stones rise into the air." },
-      { keyword: "bubble", effect: "A shimmering bubble surrounds you, protecting you from harm." },
-      { keyword: "sky", effect: "The sky parts above you, revealing a hidden constellation." }
-    ];
-
-    const enemies = [
-      { name: "Goblin", weakness: "fire" },
-      { name: "Ice Wraith", weakness: "light" },
-      { name: "Stone Golem", weakness: "wind" },
-      { name: "Dark Bat", weakness: "light" },
-      { name: "Lurking Slime", weakness: "storm" },
-      { name: "Forest Spider", weakness: "fire" },
-      { name: "Sky Serpent", weakness: "earth" },
-      { name: "Haunting Shade", weakness: "light" },
-      { name: "Feral Wolf", weakness: "bubble" },
-      { name: "Ancient Rat", weakness: "dark" }
-    ];
-
-    const inventory = [];
-    let x = 0, y = 0;
-    const visited = ['0,0'];
-
-    function castSpell() {
-      const input = document.getElementById('spellInput').value.toLowerCase();
-      let result = "Nothing happens. Perhaps try a different word.";
-      const key = `${x},${y}`;
-
-      for (let spell of spellEffects) {
-        if (input.includes(spell.keyword)) {
-          result = spell.effect;
-          if (specialEvents[key] && specialEvents[key].keyword === spell.keyword) {
-            result += ' ' + specialEvents[key].reward;
-            inventory.push(specialEvents[key].reward);
-            updateInventory();
-            result += '\n' + specialEvents[key].npc;
-          }
-          break;
-        }
-      }
-
-      document.getElementById('output').textContent = result;
-      document.getElementById('spellInput').value = "";
-    }
-
-    function updateInventory() {
-      const list = document.getElementById('inventoryList');
-      list.innerHTML = inventory.length > 0 ? inventory.map(item => `<span>${item}</span>`).join('') : '<span>(empty)</span>';
-    }
-
-    const part1 = [
-      "You see crumbling ruins",
-      "You stand by a still pond",
-      "You hear faint bells in the wind",
-      "You walk under overgrown arches",
-      "You arrive at a mossy hill",
-      "You approach flickering lanterns",
-      "You feel warmth in the ground",
-      "You hear murmuring voices nearby",
-      "You follow a trail of glittering pebbles",
-      "You stand beneath a twisted tree"
-    ];
-
-    const part2 = [
-      "where the air hums with forgotten magic.",
-      "that reflects the stars even in daylight.",
-      "from a time when dragons roamed freely.",
-      "marking the edge of a vanished kingdom.",
-      "and sense a hidden chamber below.",
-      "that whisper old secrets if you listen.",
-      "filled with butterflies made of light.",
-      "and your shadow moves on its own.",
-      "that leads toward a distant spire.",
-      "where time seems to slow down."
-    ];
-
-    const locations = {};
-    for (let xi = -10; xi <= 10; xi++) {
-      for (let yi = -10; yi <= 10; yi++) {
-        const key = `${xi},${yi}`;
-        if (!locations[key]) {
-          if ((Math.abs(xi * 31 + yi * 17) % 100) < 25) {
-            const index = (Math.abs(xi + yi) % 10);
-            locations[key] = `${part1[index]} ${part2[index]}`;
-          }
-        }
-      }
-    }
-
-    locations['0,0'] = "You are in the central garden.";
-
-    function move(direction) {
-      if (direction === 'north') y++;
-      if (direction === 'south') y--;
-      if (direction === 'east') x++;
-      if (direction === 'west') x--;
-
-      const key = `${x},${y}`;
-      if (!visited.includes(key)) visited.push(key);
-      if (visited.length > 10) visited.shift();
-
-      let text = locations[key] || "You enter a room.";
-      if (specialEvents[key]) {
-        text += ' ' + specialEvents[key].hint;
-      }
-
-      document.getElementById('locationText').innerHTML = text;
-      const distance = Math.round(Math.sqrt(x*x + y*y) * 10);
-      document.getElementById('distanceDisplay').textContent = `Distance to origin: ${distance}m`;
-      updateMinimap();
-    }
+    let x = 0;
+    let y = 0;
+    const visited = [];
 
     function updateMinimap() {
       const minimap = document.getElementById('minimap');
-      minimap.innerHTML = "";
+      minimap.innerHTML = '';
       const size = 5;
-      const offset = Math.floor(size / 2);
-
-      for (let row = offset; row >= -offset; row--) {
-        for (let col = -offset; col <= offset; col++) {
-          const cx = x + col;
-          const cy = y + row;
+      for (let row = -2; row <= 2; row++) {
+        for (let col = -2; col <= 2; col++) {
           const cell = document.createElement('div');
           cell.className = 'map-cell';
-          const key = `${cx},${cy}`;
-          if (x === cx && y === cy) {
+          const cx = x + col;
+          const cy = y + row;
+          if (cx === x && cy === y) {
             cell.classList.add('current');
-          } else if (visited.includes(key)) {
+          } else if (visited.some(v => v[0] === cx && v[1] === cy)) {
             cell.classList.add('visited');
           }
           minimap.appendChild(cell);
@@ -268,7 +135,22 @@
       }
     }
 
-    updateMinimap();
+    function move(dir) {
+      if (dir === 'north') y++;
+      if (dir === 'south') y--;
+      if (dir === 'east') x++;
+      if (dir === 'west') x--;
+      visited.push([x, y]);
+      document.getElementById('locationText').textContent = `You are at (${x}, ${y})`;
+      const distance = Math.round(Math.sqrt(x*x + y*y) * 10);
+      document.getElementById('distanceDisplay').textContent = `Distance to origin: ${distance}m`;
+      updateMinimap();
+    }
+
+    function castSpell() {
+      const spell = document.getElementById('spellInput').value;
+      document.getElementById('output').textContent = `You cast "${spell}" but nothing happens...`;
+    }
   </script>
 </body>
 </html>
