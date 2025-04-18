@@ -5,17 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Magic Spell Game</title>
   <style>
-    body { font-family: 'Georgia', serif; background: #f0f0f0; padding: 20px; text-align: center; }
-    h1 { font-size: 2em; margin-bottom: 10px; }
-    #output { margin-top: 20px; min-height: 60px; font-style: italic; }
-    .spell-history { margin-top: 30px; text-align: left; background: #fff; padding: 10px; border-radius: 8px; max-width: 600px; margin-left: auto; margin-right: auto; }
-    .history-entry { margin-bottom: 8px; border-left: 3px solid #999; padding-left: 10px; font-size: 0.95em; }
-    input[type="text"] { width: 60%; padding: 8px; font-size: 1em; border-radius: 6px; border: 1px solid #ccc; }
-    button { margin: 10px; padding: 10px 20px; font-size: 1em; border-radius: 6px; border: none; background: #6b5b95; color: white; cursor: pointer; }
-    button:hover { background: #57457b; }
+    body {
+      font-family: 'Georgia', serif;
+      background: #f0f0f0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    #output {
+      margin-top: 20px;
+      min-height: 60px;
+      font-style: italic;
+    }
+    .spell-history {
+      margin-top: 30px;
+      text-align: left;
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .history-entry {
+      margin-bottom: 8px;
+      border-left: 3px solid #999;
+      padding-left: 10px;
+      font-size: 0.95em;
+    }
+    input[type="text"] {
+      width: 60%;
+      padding: 8px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: none;
+      background: #6b5b95;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #57457b;
+    }
+    .spellbook {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 80px;
+      height: 80px;
+      background: url('https://upload.wikimedia.org/wikipedia/commons/6/60/Icon_book.png') no-repeat center/contain;
+    }
   </style>
 </head>
 <body>
+  <div class="spellbook" title="Your Spellbook"></div>
   <h1>🪄 Magic Spell Game</h1>
   <p>Type a magic word and cast a spell!</p>
   <input id="spellInput" type="text" placeholder="Enter spell..." />
