@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Magic Spell Sandbox</title>
+  <style>
+    body {
+      background: #1a1a2e;
+      color: #eaeaea;
+      font-family: 'Georgia', serif;
+      text-align: center;
+      padding: 2rem;
+    }
+    .wand-select {
+      margin-bottom: 1rem;
+    }
+    input[type="text"] {
+      padding: 0.5rem;
+      font-size: 1.2rem;
+      width: 250px;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1.2rem;
+      margin-top: 1rem;
+      cursor: pointer;
+      background: #5c5470;
+      border: none;
+      color: white;
+      border-radius: 6px;
+    }
+    .output {
+      margin-top: 2rem;
+      font-size: 1.3rem;
+      color: #ffd369;
+    }
+  </style>
+</head>
+<body>
+  <h1>🪄 Magic Spell Sandbox</h1>
+
+  <div class="wand-select">
+    <label for="wand">Choose Your Wand:</label>
+    <select id="wand">
+      <option>Moonwood Wand</option>
+      <option>Phoenix Core Wand</option>
+      <option>Obsidian Wand</option>
+    </select>
+  </div>
+
+  <input type="text" id="spellInput" placeholder="Type your spell here..." />
+  <br />
+  <button onclick="castSpell()">Cast Spell</button>
+
+  <div class="output" id="result"></div>
+
+  <script>
+    function castSpell() {
+      const input = document.getElementById('spellInput').value.toLowerCase();
+      const wand = document.getElementById('wand').value;
+      const result = document.getElementById('result');
+
+      let message = '';
+
+      // Simple keyword triggers
+      if (input.includes('flame') || input.includes('f')) {
+        message = '🔥 A burst of fire erupts from your wand!';
+      } else if (input.includes('grow') || input.includes('v')) {
+        message = '🌿 Vines burst forth, wrapping gently around the nearby stones.';
+      } else if (input.includes('wind') || input.includes('s')) {
+        message = '🌬️ A strong breeze lifts your hair as air currents swirl.';
+      } else if (input.includes('aqua') || input.includes('w')) {
+        message = '💧 Droplets of water gather midair and rain gently down.';
+      } else if (input.length <= 2) {
+        message = 'Nothing happens. Maybe try a longer word?';
+      } else {
+        message = '✨ Magic shimmers... but its effect is mysterious.';
+      }
+
+      result.innerHTML = `<strong>${wand}</strong> casts "<em>${input}</em>":<br>${message}`;
+    }
+  </script>
+</body>
+</html>
