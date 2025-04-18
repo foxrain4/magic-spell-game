@@ -3,108 +3,120 @@
 <head>
   <title>Magic Spell Game</title>
   <style>
-    body { font-family: monospace; background: black; color: lime; padding: 20px; }
-    #minimap { margin-bottom: 10px; }
-    .npc { color: cyan; }
-    .location { font-weight: bold; }
-    .locked { color: gray; }
+    #game { max-width: 400px; margin: auto; text-align: center; }
+    .map { font-family: monospace; margin-bottom: 10px; }
+    .enemy { color: red; font-weight: bold; }
   </style>
 </head>
 <body>
-  <div id="minimap"></div>
-  <div class="location" id="location"></div>
-  <div id="output"></div>
-  <input id="spellInput" placeholder="Type a spell or direction..." autofocus>
+  <div id="game">
+    <h2>Magic Spell Game</h2>
+    <div id="map" class="map"></div>
+    <div id="location"></div>
+    <div>
+      <button onclick="move('north')">North</button><br>
+      <button onclick="move('west')">West</button>
+      <button onclick="move('east')">East</button><br>
+      <button onclick="move('south')">South</button>
+    </div>
+    <p>
+      <input id="spellInput" placeholder="Cast a spell" />
+      <button onclick="castSpell()">Cast</button>
+    </p>
+    <div id="output"></div>
+  </div>
+
   <script>
-    const map = {
-      '0,0': 'a garden with silver trees',
-      '0,1': 'a quiet library',
-      '1,0': 'a shimmering pool',
-      '1,1': 'a castle courtyard',
-      '-1,0': 'a dusty tower',
-      '0,-1': 'a field with floating stones',
-    };
+    let player = { x: 0, y: 0 };
+    const mapSize = 5;
 
-    const specialEvents = {
-      '0,0': { keyword: 'grow', message: 'A tiny tree sprouts beside you. The dryad smiles.' },
-      '0,1': { keyword: 'read', message: 'The librarian ghost nods. You understand the forbidden text.' },
-      '1,0': { keyword: 'splash', message: 'A water spirit rises. "Thank you for waking me."' },
-      '1,1': { keyword: 'bow', message: 'The guard kneels. "You are worthy."' },
-      '-1,0': { keyword: 'clean', message: 'The dust lifts. A voice echoes: "My tower is restored."' },
-      '0,-1': { keyword: 'fly', message: 'You hover among the stones. A wind voice whispers approval.' }
-    };
-
-    const inventory = [];
-    let position = { x: 0, y: 0 };
-    const visited = new Set();
-    const npcsHelped = [];
-    let gameEnded = false;
-
-    const endings = [
-      "You vanish in a flash of light, forgotten by the world.",
-      "You become a wandering spirit, searching for purpose.",
-      "You awaken in a hidden sanctuary, welcomed as an apprentice.",
-      "You are crowned a protector of realms unknown.",
-      "You ascend into myth, your story whispered in every shadow."
+    let enemies = [
+      { name: "Goblin", x: 2, y: 2, hp: 3 },
+      { name: "Wraith", x: 4, y: 1, hp: 2 }
     ];
 
-    function updateUI() {
-      const key = `${position.x},${position.y}`;
-      visited.add(key);
-      const locationText = map[key] || "a mysterious fog";
-      document.getElementById('location').textContent = `You are in ${locationText}.`;
-      document.getElementById('minimap').textContent = `Visited: ${[...visited].join(' | ')}`;
+    function move(dir) {
+      if (dir === 'north') player.y--;
+      if (dir === 'south') player.y++;
+      if (dir === 'west')  player.x--;
+      if (dir === 'east')  player.x++;
+      player.x = Math.max(0, Math.min(mapSize - 1, player.x));
+      player.y = Math.max(0, Math.min(mapSize - 1, player.y));
+      enemyChase();
+      updateGame();
     }
 
-    function updateInventory() {
-      document.getElementById('output').textContent = `Inventory: ${inventory.join(', ') || 'empty'}`;
-    }
-
-    function castSpell(input) {
-      if (gameEnded) return;
-
-      input = input.toLowerCase().trim();
-      const key = `${position.x},${position.y}`;
-
-      if (['north', 'south', 'east', 'west'].includes(input)) {
-        if (input === 'north') position.y += 1;
-        if (input === 'south') position.y -= 1;
-        if (input === 'east') position.x += 1;
-        if (input === 'west') position.x -= 1;
-        updateUI();
-        return;
-      }
-
-      if (specialEvents[key] && specialEvents[key].keyword === input) {
-        if (!npcsHelped.includes(key)) {
-          npcsHelped.push(key);
+    function castSpell() {
+      const spell = document.getElementById("spellInput").value.toLowerCase().trim();
+      let foundEnemy = enemies.find(e => e.x === player.x && e.y === player.y);
+      if (foundEnemy) {
+        if (spell.includes("fire") || spell.includes("zap")) {
+          foundEnemy.hp--;
+          print(`You hit the ${foundEnemy.name} with ${spell}! HP left: ${foundEnemy.hp}`);
+          if (foundEnemy.hp <= 0) {
+            enemies = enemies.filter(e => e !== foundEnemy);
+            print(`You defeated the ${foundEnemy.name}!`);
+          }
+        } else {
+          print(`Your spell had no effect. The ${foundEnemy.name} strikes back!`);
         }
-        document.getElementById('output').textContent = specialEvents[key].message;
-        return;
+      } else {
+        print(`Nothing happens. No enemy here.`);
       }
-
-      if (input === 'ascend') {
-        let endingText = "";
-        const count = npcsHelped.length;
-        const index = Math.min(count, endings.length - 1);
-        endingText = endings[index] + `\nYou achieved Ending ${index + 1} of ${endings.length}.`;
-        document.getElementById('output').textContent = endingText;
-        gameEnded = true;
-        return;
-      }
-
-      inventory.push(input);
-      updateInventory();
     }
 
-    document.getElementById('spellInput').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        castSpell(e.target.value);
-        e.target.value = '';
-      }
-    });
+    function enemyChase() {
+      enemies.forEach(e => {
+        let dx = player.x - e.x;
+        let dy = player.y - e.y;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          e.x += Math.sign(dx);
+        } else {
+          e.y += Math.sign(dy);
+        }
+      });
+    }
 
-    updateUI();
+    function updateGame() {
+      document.getElementById("location").textContent = `You are at (${player.x}, ${player.y})`;
+      let nearby = enemies.filter(e =>
+        Math.abs(e.x - player.x) <= 1 && Math.abs(e.y - player.y) <= 1
+      );
+      let here = enemies.find(e => e.x === player.x && e.y === player.y);
+      let msg = "";
+      if (here) {
+        msg += `<p class="enemy">⚔️ You have encountered a ${here.name}!</p>`;
+      } else if (nearby.length > 0) {
+        msg += `<p class="enemy">⚠️ You sense danger nearby...</p>`;
+      }
+      renderMap();
+      print(msg, true);
+    }
+
+    function renderMap() {
+      let map = "";
+      for (let y = 0; y < mapSize; y++) {
+        for (let x = 0; x < mapSize; x++) {
+          if (player.x === x && player.y === y) {
+            map += "🧙 ";
+          } else if (enemies.find(e => e.x === x && e.y === y)) {
+            map += "👹 ";
+          } else {
+            map += "⬜ ";
+          }
+        }
+        map += "<br>";
+      }
+      document.getElementById("map").innerHTML = map;
+    }
+
+    function print(msg, replace = false) {
+      let output = document.getElementById("output");
+      if (replace) output.innerHTML = msg;
+      else output.innerHTML += `<p>${msg}</p>`;
+    }
+
+    updateGame();
   </script>
 </body>
 </html>
