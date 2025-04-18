@@ -118,7 +118,7 @@
       <button onclick="move('north')">⬆ North</button><br />
       <button onclick="move('west')">⬅ West</button>
       <button onclick="move('east')">East ➡</button><br />
-      <button onclick="move('south')">⬇ South</button>
+      <button onclick="move('south')">🔻 South</button>
     </div>
     <p id="locationText">You are in the central garden.</p>
     <p id="distanceDisplay">Distance to origin: 0m</p>
@@ -141,17 +141,17 @@
 
     const specialEvents = {
       "3,2": {
-        hint: "A burnt sigil is etched on the stones.",
+        hint: "<b>A burnt sigil is etched on the stones.</b>",
         keyword: "fire",
         reward: "The sigil ignites and reveals a glowing ember."
       },
       "-2,4": {
-        hint: "You notice frost on the leaves despite the warmth.",
+        hint: "<b>You notice frost on the leaves despite the warmth.</b>",
         keyword: "ice",
         reward: "The ice forms a key of crystal."
       },
       "-3,-1": {
-        hint: "The wind howls as if whispering your name.",
+        hint: "<b>The wind howls as if whispering your name.</b>",
         keyword: "wind",
         reward: "A whisper leads you to a hidden scroll."
       }
@@ -226,8 +226,10 @@
       for (let yi = -10; yi <= 10; yi++) {
         const key = `${xi},${yi}`;
         if (!locations[key]) {
-          const index = (Math.abs(xi + yi) % 10);
-          locations[key] = `${part1[index]} ${part2[index]}`;
+          if ((Math.abs(xi * 31 + yi * 17) % 100) < 25) {
+            const index = (Math.abs(xi + yi) % 10);
+            locations[key] = `${part1[index]} ${part2[index]}`;
+          }
         }
       }
     }
@@ -248,7 +250,7 @@
         text += ' ' + specialEvents[key].hint;
       }
 
-      document.getElementById('locationText').textContent = text;
+      document.getElementById('locationText').innerHTML = text;
       const distance = Math.round(Math.sqrt(x*x + y*y) * 10);
       document.getElementById('distanceDisplay').textContent = `Distance to origin: ${distance}m`;
       updateMinimap();
