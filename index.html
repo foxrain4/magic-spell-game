@@ -77,15 +77,6 @@
     #inventory {
       margin-top: 20px;
       font-size: 0.95em;
-      text-align: right;
-      position: absolute;
-      right: 20px;
-      top: 20px;
-      width: 200px;
-    }
-    #inventoryList span {
-      display: block;
-      margin-top: 5px;
     }
   </style>
 </head>
@@ -107,7 +98,7 @@
     <p id="locationText">You are in the central garden.</p>
     <p id="distanceDisplay">Distance to origin: 0m</p>
     <div id="minimap"></div>
-    <div id="inventory"><strong>Inventory:</strong><div id="inventoryList"><span>(empty)</span></div></div>
+    <div id="inventory"><strong>Inventory:</strong> <span id="inventoryList">(empty)</span></div>
   </div>
 
   <script>
@@ -125,22 +116,56 @@
       { keyword: "sky", effect: "The sky parts above you, revealing a hidden constellation." }
     ];
 
-    const enemies = [
-      { name: "Goblin", weakness: "fire" },
-      { name: "Ice Wraith", weakness: "light" },
-      { name: "Stone Golem", weakness: "wind" },
-      { name: "Dark Bat", weakness: "light" },
-      { name: "Lurking Slime", weakness: "storm" },
-      { name: "Forest Spider", weakness: "fire" },
-      { name: "Sky Serpent", weakness: "earth" },
-      { name: "Haunting Shade", weakness: "light" },
-      { name: "Feral Wolf", weakness: "bubble" },
-      { name: "Ancient Rat", weakness: "dark" }
-    ];
+    const specialEvents = {
+      "3,2": {
+        hint: "<b>A burnt sigil is etched on the stones.</b>",
+        keyword: "fire",
+        reward: "The sigil ignites and reveals a glowing ember.",
+        npc: "An old smith appears, seeking a glowing ember. Give it to him? (yes)"
+      },
+      "-2,4": {
+        hint: "<b>You notice frost on the leaves despite the warmth.</b>",
+        keyword: "ice",
+        reward: "The ice forms a key of crystal.",
+        npc: "A frost fairy arrives, asking for a crystal key to unlock her wings. Give it to her? (yes)"
+      },
+      "-3,-1": {
+        hint: "<b>The wind howls as if whispering your name.</b>",
+        keyword: "wind",
+        reward: "A whisper leads you to a hidden scroll.",
+        npc: "Granny appears. Granny wants a scroll. Give it to her? (yes)"
+      },
+      "2,-3": {
+        hint: "<b>Roots twist upward from the earth like reaching fingers.</b>",
+        keyword: "grow",
+        reward: "A blooming lily lifts a small charm into your hand.",
+        npc: "A forest spirit offers you a treasure if you give her the charm. (yes)"
+      },
+      "1,1": {
+        hint: "<b>Thunderclouds churn silently above.</b>",
+        keyword: "storm",
+        reward: "A shard of lightning fuses into a wand token.",
+        npc: "A storm mage wants the wand token for his experiments. Give it to him? (yes)"
+      },
+      "-4,0": {
+        hint: "<b>The ground pulses gently beneath your feet.</b>",
+        keyword: "earth",
+        reward: "You find a stone rune glowing faintly.",
+        npc: "A golem gestures slowly, requesting the stone rune. Give it to him? (yes)"
+      },
+      "1,-4": {
+        hint: "<b>The air here feels thinner, and clouds swirl close to the ground.</b>",
+        keyword: "sky",
+        reward: "A star-shaped charm falls gently into your hand.",
+        npc: "A sky witch seeks the star charm to finish her potion. Give it to her? (yes)"
+      }
+    };
 
     const inventory = [];
+
     let x = 0, y = 0;
-    const visited = ['0,0'];
+    const visited = [];
+    visited.push('0,0');
 
     function castSpell() {
       const input = document.getElementById('spellInput').value.toLowerCase();
@@ -165,8 +190,7 @@
     }
 
     function updateInventory() {
-      const list = document.getElementById('inventoryList');
-      list.innerHTML = inventory.length > 0 ? inventory.map(item => `<span>${item}</span>`).join('') : '<span>(empty)</span>';
+      document.getElementById('inventoryList').textContent = inventory.length > 0 ? inventory.join(", ") : "(empty)";
     }
 
     const part1 = [
