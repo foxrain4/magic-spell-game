@@ -133,18 +133,45 @@
       { keyword: "light", effect: "A glowing orb of light floats into the sky, illuminating everything." },
       { keyword: "dark", effect: "Shadows stretch and twist as a veil of darkness settles in." },
       { keyword: "grow", effect: "Vines burst from the ground, sprouting flowers and glowing moss." },
-      { keyword: "teleport", effect: "You shimmer and vanish, appearing somewhere else entirely." }
+      { keyword: "teleport", effect: "You shimmer and vanish, appearing somewhere else entirely." },
+      { keyword: "storm", effect: "Thunder rumbles as lightning cracks across the sky." },
+      { keyword: "earth", effect: "The ground trembles, and stones rise into the air." },
+      { keyword: "bubble", effect: "A shimmering bubble surrounds you, protecting you from harm." }
     ];
 
+    const specialEvents = {
+      "3,2": {
+        hint: "A burnt sigil is etched on the stones.",
+        keyword: "fire",
+        reward: "The sigil ignites and reveals a glowing ember."
+      },
+      "-2,4": {
+        hint: "You notice frost on the leaves despite the warmth.",
+        keyword: "ice",
+        reward: "The ice forms a key of crystal."
+      },
+      "-3,-1": {
+        hint: "The wind howls as if whispering your name.",
+        keyword: "wind",
+        reward: "A whisper leads you to a hidden scroll."
+      }
+    };
+
     const history = [];
+    let x = 0, y = 0;
+    const visited = new Set(['0,0']);
 
     function castSpell() {
       const input = document.getElementById('spellInput').value.toLowerCase();
       let result = "Nothing happens. Perhaps try a different word.";
+      const key = `${x},${y}`;
 
       for (let spell of spellEffects) {
         if (input.includes(spell.keyword)) {
           result = spell.effect;
+          if (specialEvents[key] && specialEvents[key].keyword === spell.keyword) {
+            result += ' ' + specialEvents[key].reward;
+          }
           break;
         }
       }
@@ -198,7 +225,7 @@
     for (let xi = -10; xi <= 10; xi++) {
       for (let yi = -10; yi <= 10; yi++) {
         const key = `${xi},${yi}`;
-        if (!locations[key] && (Math.abs(xi) <= 10 && Math.abs(yi) <= 10)) {
+        if (!locations[key]) {
           const index = (Math.abs(xi + yi) % 10);
           locations[key] = `${part1[index]} ${part2[index]}`;
         }
@@ -206,9 +233,6 @@
     }
 
     locations['0,0'] = "You are in the central garden.";
-
-    let x = 0, y = 0;
-    const visited = new Set(['0,0']);
 
     function move(direction) {
       if (direction === 'north') y++;
@@ -219,12 +243,14 @@
       const key = `${x},${y}`;
       visited.add(key);
 
-      const text = locations[key] || "You explore a mysterious area with unknown magic.";
-      document.getElementById('locationText').textContent = text;
+      let text = locations[key] || "You explore a mysterious area with unknown magic.";
+      if (specialEvents[key]) {
+        text += ' ' + specialEvents[key].hint;
+      }
 
+      document.getElementById('locationText').textContent = text;
       const distance = Math.round(Math.sqrt(x*x + y*y) * 10);
       document.getElementById('distanceDisplay').textContent = `Distance to origin: ${distance}m`;
-
       updateMinimap();
     }
 
