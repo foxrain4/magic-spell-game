@@ -20,22 +20,6 @@
       min-height: 60px;
       font-style: italic;
     }
-    .spell-history {
-      margin-top: 30px;
-      text-align: left;
-      background: #fff;
-      padding: 10px;
-      border-radius: 8px;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .history-entry {
-      margin-bottom: 8px;
-      border-left: 3px solid #999;
-      padding-left: 10px;
-      font-size: 0.95em;
-    }
     input[type="text"] {
       width: 60%;
       padding: 8px;
@@ -55,14 +39,6 @@
     }
     button:hover {
       background: #57457b;
-    }
-    .spellbook {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      width: 80px;
-      height: 80px;
-      background: url('https://upload.wikimedia.org/wikipedia/commons/6/60/Icon_book.png') no-repeat center/contain;
     }
     .explore {
       margin-top: 40px;
@@ -101,16 +77,11 @@
   </style>
 </head>
 <body>
-  <div class="spellbook" title="Your Spellbook"></div>
   <h1>🪄 Magic Spell Game</h1>
   <p>Type a magic word and cast a spell!</p>
   <input id="spellInput" type="text" placeholder="Enter spell..." />
   <button onclick="castSpell()">Cast</button>
   <div id="output"></div>
-  <div class="spell-history" id="spellHistory">
-    <h3>🧾 Spell History</h3>
-    <div id="historyEntries"></div>
-  </div>
 
   <div class="explore">
     <h3>🌍 Explore the World</h3>
@@ -118,7 +89,7 @@
       <button onclick="move('north')">⬆ North</button><br />
       <button onclick="move('west')">⬅ West</button>
       <button onclick="move('east')">East ➡</button><br />
-      <button onclick="move('south')">🔻 South</button>
+      <button onclick="move('south')">⬇ South</button>
     </div>
     <p id="locationText">You are in the central garden.</p>
     <p id="distanceDisplay">Distance to origin: 0m</p>
@@ -154,12 +125,29 @@
         hint: "<b>The wind howls as if whispering your name.</b>",
         keyword: "wind",
         reward: "A whisper leads you to a hidden scroll."
+      },
+      "2,-3": {
+        hint: "<b>Roots twist upward from the earth like reaching fingers.</b>",
+        keyword: "grow",
+        reward: "A blooming lily lifts a small charm into your hand."
+      },
+      "1,1": {
+        hint: "<b>Thunderclouds churn silently above.</b>",
+        keyword: "storm",
+        reward: "A shard of lightning fuses into a wand token."
+      },
+      "-4,0": {
+        hint: "<b>The ground pulses gently beneath your feet.</b>",
+        keyword: "earth",
+        reward: "You find a stone rune glowing faintly."
       }
     };
 
-    const history = [];
+    const inventory = [];
+
     let x = 0, y = 0;
-    const visited = new Set(['0,0']);
+    const visited = [];
+    visited.push('0,0');
 
     function castSpell() {
       const input = document.getElementById('spellInput').value.toLowerCase();
@@ -171,28 +159,14 @@
           result = spell.effect;
           if (specialEvents[key] && specialEvents[key].keyword === spell.keyword) {
             result += ' ' + specialEvents[key].reward;
+            inventory.push(specialEvents[key].reward);
           }
           break;
         }
       }
 
       document.getElementById('output').textContent = result;
-      if (input.trim()) {
-        history.unshift({ word: input, result });
-        updateHistory();
-      }
       document.getElementById('spellInput').value = "";
-    }
-
-    function updateHistory() {
-      const container = document.getElementById('historyEntries');
-      container.innerHTML = "";
-      history.slice(0, 10).forEach(entry => {
-        const div = document.createElement('div');
-        div.className = 'history-entry';
-        div.textContent = `"${entry.word}" → ${entry.result}`;
-        container.appendChild(div);
-      });
     }
 
     const part1 = [
@@ -243,9 +217,10 @@
       if (direction === 'west') x--;
 
       const key = `${x},${y}`;
-      visited.add(key);
+      if (!visited.includes(key)) visited.push(key);
+      if (visited.length > 10) visited.shift();
 
-      let text = locations[key] || "You explore a mysterious area with unknown magic.";
+      let text = locations[key] || "";
       if (specialEvents[key]) {
         text += ' ' + specialEvents[key].hint;
       }
@@ -271,7 +246,7 @@
           const key = `${cx},${cy}`;
           if (x === cx && y === cy) {
             cell.classList.add('current');
-          } else if (visited.has(key)) {
+          } else if (visited.includes(key)) {
             cell.classList.add('visited');
           }
           minimap.appendChild(cell);
