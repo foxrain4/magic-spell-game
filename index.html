@@ -79,6 +79,25 @@
       font-weight: bold;
       margin-top: 5px;
     }
+    #minimap {
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: repeat(5, 20px);
+      gap: 3px;
+      justify-content: center;
+    }
+    .map-cell {
+      width: 20px;
+      height: 20px;
+      background: #ccc;
+      border: 1px solid #999;
+    }
+    .current {
+      background: #6b5b95;
+    }
+    .visited {
+      background: #aaa;
+    }
   </style>
 </head>
 <body>
@@ -103,6 +122,7 @@
     </div>
     <p id="locationText">You are in the central garden.</p>
     <p id="distanceDisplay">Distance to origin: 0m</p>
+    <div id="minimap"></div>
   </div>
 
   <script>
@@ -157,6 +177,7 @@
     };
 
     let x = 0, y = 0;
+    const visited = new Set(['0,0']);
 
     function move(direction) {
       if (direction === 'north') y++;
@@ -165,12 +186,41 @@
       if (direction === 'west') x--;
 
       const key = `${x},${y}`;
+      visited.add(key);
+
       const text = locations[key] || "You explore a mysterious area with unknown magic.";
       document.getElementById('locationText').textContent = text;
 
-      const distance = Math.round(Math.sqrt(x*x + y*y) * 10); // 10 meters per tile
+      const distance = Math.round(Math.sqrt(x*x + y*y) * 10);
       document.getElementById('distanceDisplay').textContent = `Distance to origin: ${distance}m`;
+
+      updateMinimap();
     }
+
+    function updateMinimap() {
+      const minimap = document.getElementById('minimap');
+      minimap.innerHTML = "";
+      const size = 5;
+      const offset = Math.floor(size / 2);
+
+      for (let row = offset; row >= -offset; row--) {
+        for (let col = -offset; col <= offset; col++) {
+          const cx = x + col;
+          const cy = y + row;
+          const cell = document.createElement('div');
+          cell.className = 'map-cell';
+          const key = `${cx},${cy}`;
+          if (x === cx && y === cy) {
+            cell.classList.add('current');
+          } else if (visited.has(key)) {
+            cell.classList.add('visited');
+          }
+          minimap.appendChild(cell);
+        }
+      }
+    }
+
+    updateMinimap();
   </script>
 </body>
 </html>
