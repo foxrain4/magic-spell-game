@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Magic Spell Game</title>
+  <style>
+    body {
+      font-family: 'Georgia', serif;
+      background: #f0f0f0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    #output {
+      margin-top: 20px;
+      min-height: 60px;
+      font-style: italic;
+    }
+    .spell-history {
+      margin-top: 30px;
+      text-align: left;
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .history-entry {
+      margin-bottom: 8px;
+      border-left: 3px solid #999;
+      padding-left: 10px;
+      font-size: 0.95em;
+    }
+    input[type="text"] {
+      width: 60%;
+      padding: 8px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: none;
+      background: #6b5b95;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #57457b;
+    }
+    .spellbook {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 80px;
+      height: 80px;
+      background: url('https://upload.wikimedia.org/wikipedia/commons/6/60/Icon_book.png') no-repeat center/contain;
+    }
+    .explore {
+      margin-top: 40px;
+    }
+    .direction-buttons button {
+      margin: 5px;
+      padding: 6px 14px;
+    }
+    #locationText {
+      margin-top: 10px;
+      font-size: 1.1em;
+    }
+    #distanceDisplay {
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    #minimap {
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: repeat(5, 20px);
+      gap: 3px;
+      justify-content: center;
+    }
+    .map-cell {
+      width: 20px;
+      height: 20px;
+      background: #ccc;
+      border: 1px solid #999;
+    }
+    .current {
+      background: #6b5b95;
+    }
+    .visited {
+      background: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="spellbook" title="Your Spellbook"></div>
+  <h1>🪄 Magic Spell Game</h1>
+  <p>Type a magic word and cast a spell!</p>
+  <input id="spellInput" type="text" placeholder="Enter spell..." />
+  <button onclick="castSpell()">Cast</button>
+  <div id="output"></div>
+  <div class="spell-history" id="spellHistory">
+    <h3>🧾 Spell History</h3>
+    <div id="historyEntries"></div>
+  </div>
+
+  <div class="explore">
+    <h3>🌍 Explore the World</h3>
+    <div class="direction-buttons">
+      <button onclick="move('north')">⬆ North</button><br />
+      <button onclick="move('west')">⬅ West</button>
+      <button onclick="move('east')">East ➡</button><br />
+      <button onclick="move('south')">⬇ South</button>
+    </div>
+    <p id="locationText">You are in the central garden.</p>
+    <p id="distanceDisplay">Distance to origin: 0m</p>
+    <div id="minimap"></div>
+  </div>
+
+  <script>
+    const spellEffects = [
+      { keyword: "fire", effect: "A burst of flames erupts from your wand, lighting up the sky." },
+      { keyword: "ice", effect: "Sharp icicles shoot forward, freezing the air." },
+      { keyword: "wind", effect: "A gust of wind sweeps through the area, swirling leaves and dust." },
+      { keyword: "light", effect: "A glowing orb of light floats into the sky, illuminating everything." },
+      { keyword: "dark", effect: "Shadows stretch and twist as a veil of darkness settles in." },
+      { keyword: "grow", effect: "Vines burst from the ground, sprouting flowers and glowing moss." },
+      { keyword: "teleport", effect: "You shimmer and vanish, appearing somewhere else entirely." }
+    ];
+
+    const history = [];
+
+    function castSpell() {
+      const input = document.getElementById('spellInput').value.toLowerCase();
+      let result = "Nothing happens. Perhaps try a different word.";
+
+      for (let spell of spellEffects) {
+        if (input.includes(spell.keyword)) {
+          result = spell.effect;
+          break;
+        }
+      }
+
+      document.getElementById('output').textContent = result;
+      if (input.trim()) {
+        history.unshift({ word: input, result });
+        updateHistory();
+      }
+      document.getElementById('spellInput').value = "";
+    }
+
+    function updateHistory() {
+      const container = document.getElementById('historyEntries');
+      container.innerHTML = "";
+      history.slice(0, 10).forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'history-entry';
+        div.textContent = `"${entry.word}" → ${entry.result}`;
+        container.appendChild(div);
+      });
+    }
+
+    const locations = {
+      '0,0': "You are in the central garden.",
+      '0,1': "You arrive at a shimmering lake with magical fish.",
+      '0,-1': "You step into a misty forest filled with whispers.",
+      '-1,0': "You find an ancient stone gate buried in vines.",
+      '1,0': "You walk into a sunny meadow with glowing butterflies."
+    };
+
+    let x = 0, y = 0;
+    const visited = new Set(['0,0']);
+
+    function move(direction) {
+      if (direction === 'north') y++;
+      if (direction === 'south') y--;
+      if (direction === 'east') x++;
+      if (direction === 'west') x--;
+
+      const key = `${x},${y}`;
+      visited.add(key);
+
+      const text = locations[key] || "You explore a mysterious area with unknown magic.";
+      document.getElementById('locationText').textContent = text;
+
+      const distance = Math.round(Math.sqrt(x*x + y*y) * 10);
+      document.getElementById('distanceDisplay').textContent = `Distance to origin: ${distance}m`;
+
+      updateMinimap();
+    }
+
+    function updateMinimap() {
+      const minimap = document.getElementById('minimap');
+      minimap.innerHTML = "";
+      const size = 5;
+      const offset = Math.floor(size / 2);
+
+      for (let row = offset; row >= -offset; row--) {
+        for (let col = -offset; col <= offset; col++) {
+          const cx = x + col;
+          const cy = y + row;
+          const cell = document.createElement('div');
+          cell.className = 'map-cell';
+          const key = `${cx},${cy}`;
+          if (x === cx && y === cy) {
+            cell.classList.add('current');
+          } else if (visited.has(key)) {
+            cell.classList.add('visited');
+          }
+          minimap.appendChild(cell);
+        }
+      }
+    }
+
+    updateMinimap();
+  </script>
+</body>
+</html>
