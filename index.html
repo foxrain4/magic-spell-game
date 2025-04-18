@@ -168,13 +168,44 @@
       });
     }
 
-    const locations = {
-      '0,0': "You are in the central garden.",
-      '0,1': "You arrive at a shimmering lake with magical fish.",
-      '0,-1': "You step into a misty forest filled with whispers.",
-      '-1,0': "You find an ancient stone gate buried in vines.",
-      '1,0': "You walk into a sunny meadow with glowing butterflies."
-    };
+    const part1 = [
+      "You see crumbling ruins",
+      "You stand by a still pond",
+      "You hear faint bells in the wind",
+      "You walk under overgrown arches",
+      "You arrive at a mossy hill",
+      "You approach flickering lanterns",
+      "You feel warmth in the ground",
+      "You hear murmuring voices nearby",
+      "You follow a trail of glittering pebbles",
+      "You stand beneath a twisted tree"
+    ];
+
+    const part2 = [
+      "where the air hums with forgotten magic.",
+      "that reflects the stars even in daylight.",
+      "from a time when dragons roamed freely.",
+      "marking the edge of a vanished kingdom.",
+      "and sense a hidden chamber below.",
+      "that whisper old secrets if you listen.",
+      "filled with butterflies made of light.",
+      "and your shadow moves on its own.",
+      "that leads toward a distant spire.",
+      "where time seems to slow down."
+    ];
+
+    const locations = {};
+    for (let xi = -10; xi <= 10; xi++) {
+      for (let yi = -10; yi <= 10; yi++) {
+        const key = `${xi},${yi}`;
+        if (!locations[key] && (Math.abs(xi) <= 10 && Math.abs(yi) <= 10)) {
+          const index = (Math.abs(xi + yi) % 10);
+          locations[key] = `${part1[index]} ${part2[index]}`;
+        }
+      }
+    }
+
+    locations['0,0'] = "You are in the central garden.";
 
     let x = 0, y = 0;
     const visited = new Set(['0,0']);
