@@ -64,6 +64,13 @@
       height: 80px;
       background: url('https://upload.wikimedia.org/wikipedia/commons/6/60/Icon_book.png') no-repeat center/contain;
     }
+    .explore {
+      margin-top: 40px;
+    }
+    .direction-buttons button {
+      margin: 5px;
+      padding: 6px 14px;
+    }
   </style>
 </head>
 <body>
@@ -76,6 +83,17 @@
   <div class="spell-history" id="spellHistory">
     <h3>🧾 Spell History</h3>
     <div id="historyEntries"></div>
+  </div>
+
+  <div class="explore">
+    <h3>🌍 Explore the World</h3>
+    <div class="direction-buttons">
+      <button onclick="move('north')">⬆ North</button><br />
+      <button onclick="move('west')">⬅ West</button>
+      <button onclick="move('east')">East ➡</button><br />
+      <button onclick="move('south')">⬇ South</button>
+    </div>
+    <p id="locationText">You are in the central garden.</p>
   </div>
 
   <script>
@@ -119,6 +137,27 @@
         div.textContent = `"${entry.word}" → ${entry.result}`;
         container.appendChild(div);
       });
+    }
+
+    const locations = {
+      '0,0': "You are in the central garden.",
+      '0,1': "You arrive at a shimmering lake with magical fish.",
+      '0,-1': "You step into a misty forest filled with whispers.",
+      '-1,0': "You find an ancient stone gate buried in vines.",
+      '1,0': "You walk into a sunny meadow with glowing butterflies."
+    };
+
+    let x = 0, y = 0;
+
+    function move(direction) {
+      if (direction === 'north') y++;
+      if (direction === 'south') y--;
+      if (direction === 'east') x++;
+      if (direction === 'west') x--;
+
+      const key = `${x},${y}`;
+      const text = locations[key] || "You explore a mysterious area with unknown magic.";
+      document.getElementById('locationText').textContent = text;
     }
   </script>
 </body>
