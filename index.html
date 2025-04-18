@@ -74,10 +74,14 @@
     .visited {
       background: #aaa;
     }
+    #inventory {
+      margin-top: 20px;
+      font-size: 0.95em;
+    }
   </style>
 </head>
 <body>
-  <h1>🪄 Magic Spell Game</h1>
+  <h1>🧤 Magic Spell Game</h1>
   <p>Type a magic word and cast a spell!</p>
   <input id="spellInput" type="text" placeholder="Enter spell..." />
   <button onclick="castSpell()">Cast</button>
@@ -94,6 +98,7 @@
     <p id="locationText">You are in the central garden.</p>
     <p id="distanceDisplay">Distance to origin: 0m</p>
     <div id="minimap"></div>
+    <div id="inventory"><strong>Inventory:</strong> <span id="inventoryList">(empty)</span></div>
   </div>
 
   <script>
@@ -107,39 +112,52 @@
       { keyword: "teleport", effect: "You shimmer and vanish, appearing somewhere else entirely." },
       { keyword: "storm", effect: "Thunder rumbles as lightning cracks across the sky." },
       { keyword: "earth", effect: "The ground trembles, and stones rise into the air." },
-      { keyword: "bubble", effect: "A shimmering bubble surrounds you, protecting you from harm." }
+      { keyword: "bubble", effect: "A shimmering bubble surrounds you, protecting you from harm." },
+      { keyword: "sky", effect: "The sky parts above you, revealing a hidden constellation." }
     ];
 
     const specialEvents = {
       "3,2": {
         hint: "<b>A burnt sigil is etched on the stones.</b>",
         keyword: "fire",
-        reward: "The sigil ignites and reveals a glowing ember."
+        reward: "The sigil ignites and reveals a glowing ember.",
+        npc: "An old smith appears, seeking a glowing ember. Give it to him? (yes)"
       },
       "-2,4": {
         hint: "<b>You notice frost on the leaves despite the warmth.</b>",
         keyword: "ice",
-        reward: "The ice forms a key of crystal."
+        reward: "The ice forms a key of crystal.",
+        npc: "A frost fairy arrives, asking for a crystal key to unlock her wings. Give it to her? (yes)"
       },
       "-3,-1": {
         hint: "<b>The wind howls as if whispering your name.</b>",
         keyword: "wind",
-        reward: "A whisper leads you to a hidden scroll."
+        reward: "A whisper leads you to a hidden scroll.",
+        npc: "Granny appears. Granny wants a scroll. Give it to her? (yes)"
       },
       "2,-3": {
         hint: "<b>Roots twist upward from the earth like reaching fingers.</b>",
         keyword: "grow",
-        reward: "A blooming lily lifts a small charm into your hand."
+        reward: "A blooming lily lifts a small charm into your hand.",
+        npc: "A forest spirit offers you a treasure if you give her the charm. (yes)"
       },
       "1,1": {
         hint: "<b>Thunderclouds churn silently above.</b>",
         keyword: "storm",
-        reward: "A shard of lightning fuses into a wand token."
+        reward: "A shard of lightning fuses into a wand token.",
+        npc: "A storm mage wants the wand token for his experiments. Give it to him? (yes)"
       },
       "-4,0": {
         hint: "<b>The ground pulses gently beneath your feet.</b>",
         keyword: "earth",
-        reward: "You find a stone rune glowing faintly."
+        reward: "You find a stone rune glowing faintly.",
+        npc: "A golem gestures slowly, requesting the stone rune. Give it to him? (yes)"
+      },
+      "1,-4": {
+        hint: "<b>The air here feels thinner, and clouds swirl close to the ground.</b>",
+        keyword: "sky",
+        reward: "A star-shaped charm falls gently into your hand.",
+        npc: "A sky witch seeks the star charm to finish her potion. Give it to her? (yes)"
       }
     };
 
@@ -160,6 +178,8 @@
           if (specialEvents[key] && specialEvents[key].keyword === spell.keyword) {
             result += ' ' + specialEvents[key].reward;
             inventory.push(specialEvents[key].reward);
+            updateInventory();
+            result += '\n' + specialEvents[key].npc;
           }
           break;
         }
@@ -167,6 +187,10 @@
 
       document.getElementById('output').textContent = result;
       document.getElementById('spellInput').value = "";
+    }
+
+    function updateInventory() {
+      document.getElementById('inventoryList').textContent = inventory.length > 0 ? inventory.join(", ") : "(empty)";
     }
 
     const part1 = [
@@ -220,7 +244,7 @@
       if (!visited.includes(key)) visited.push(key);
       if (visited.length > 10) visited.shift();
 
-      let text = locations[key] || "";
+      let text = locations[key] || "You enter a room.";
       if (specialEvents[key]) {
         text += ' ' + specialEvents[key].hint;
       }
